@@ -47,7 +47,8 @@ class Statistics:
         self.last_analysis_time = datetime.now()
     
     def get_uptime(self):
-        delta = datetime.now() - self.start_time        hours = delta.total_seconds() / 3600
+        delta = datetime.now() - self.start_time
+        hours = delta.total_seconds() / 3600
         return f"{hours:.2f} hours"
     
     def get_success_rate(self):
@@ -431,4 +432,5 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=PORT, debug=False)
     except Exception as e:
         logger.error(f"Failed to start server: {str(e)}")
+
         sys.exit(1)
