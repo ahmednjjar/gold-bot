@@ -47,8 +47,7 @@ class Statistics:
         self.last_analysis_time = datetime.now()
     
     def get_uptime(self):
-        delta = datetime.now() - self.start_time
-        hours = delta.total_seconds() / 3600
+        delta = datetime.now() - self.start_time        hours = delta.total_seconds() / 3600
         return f"{hours:.2f} hours"
     
     def get_success_rate(self):
@@ -90,38 +89,38 @@ def retry_on_failure(max_attempts=3, delay=5):
 def analyze_gold():
     logger.info("Starting Gold Analysis...")
     
-    try:    
+    try:
         # محاولة Yahoo Finance مع headers
         url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F"
-    params = {'interval': '1h', 'range': '5d'}
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-    }
-    
-    logger.info("Fetching data from Yahoo Finance...")
-    response = requests.get(url, params=params, headers=headers, timeout=15)
-    
-    if response.status_code != 200:
-        logger.error(f"API returned status code: {response.status_code}")
-        return {"error": f"API error: {response.status_code}"}
-    
-    data = response.json()
-    
-    # التحقق من البيانات
-    if not data.get('chart') or not data['chart'].get('result'):
-        logger.error("No data in API response")
-        return {"error": "No data received from API"}
+        params = {'interval': '1h', 'range': '5d'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+                logger.info("Fetching data from Yahoo Finance...")
+        response = requests.get(url, params=params, headers=headers, timeout=15)
+        
+        if response.status_code != 200:
+            logger.error(f"API returned status code: {response.status_code}")
+            return {"error": f"API error: {response.status_code}"}
+        
+        data = response.json()
+        
+        if not data.get('chart') or not data['chart'].get('result'):
+            logger.error("No data in API response")
+            return {"error": "No data received from API"}
+        
+        chart = data['chart']['result'][0]
+        quotes = chart['indicators']['quote'][0]
         
         closes = quotes['close']
         highs = quotes['high']
         lows = quotes['low']
         
         if len(closes) < 20:
-            return {"error": "Insufficient data for analysis"}
+            return {"error": "Insufficient data"}
         
         current = closes[-1]
         prev = closes[-2]
-        
         price_change = current - prev
         price_change_pct = (price_change / prev) * 100 if prev > 0 else 0
         
@@ -130,7 +129,6 @@ def analyze_gold():
         
         gains = 0
         losses = 0
-        
         for i in range(1, 15):
             if len(closes) > i:
                 change = closes[-i] - closes[-i-1]
@@ -147,12 +145,12 @@ def analyze_gold():
         resistance = max(highs[-20:])
         support = min(lows[-20:])
         resistance_2 = max(highs[-50:]) if len(highs) >= 50 else resistance
-        support_2 = min(lows[-50:]) if len(lows) >= 50 else support
-        
+        support_2 = min(lows[-50:]) if len(lows) >= 50 else support        
         signal = "WAIT"
         signal_strength = "NEUTRAL"
         reasons = []
-                buy_conditions = 0
+        
+        buy_conditions = 0
         if prev > sma_20:
             buy_conditions += 1
             reasons.append("Price > SMA20")
@@ -196,12 +194,12 @@ def analyze_gold():
         else:
             stop_loss = 0
             take_profit = 0
-        
-        result = {
+                result = {
             "success": True,
             "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "price": {
-                "current": round(current, 2),                "previous": round(prev, 2),
+                "current": round(current, 2),
+                "previous": round(prev, 2),
                 "change": round(price_change, 2),
                 "change_percent": round(price_change_pct, 2)
             },
@@ -236,11 +234,8 @@ def analyze_gold():
     except requests.exceptions.Timeout:
         logger.error("Request timeout")
         return {"error": "Request timeout"}
-    except requests.exceptions.ConnectionError:
-        logger.error("Connection error")
-        return {"error": "Connection error"}
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Error in analyze_gold: {str(e)}")
         return {"error": str(e)}
 
 def send_telegram_message(message, parse_mode='HTML'):
@@ -248,9 +243,9 @@ def send_telegram_message(message, parse_mode='HTML'):
         logger.warning("TELEGRAM_BOT_TOKEN not configured")
         return False
     
-    if not TELEGRAM_CHAT_IDS:
-        logger.warning("No Chat IDs configured")
-        return False    
+    if not TELEGRAM_CHAT_IDS:        logger.warning("No Chat IDs configured")
+        return False
+    
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     
     success_count = 0
@@ -298,8 +293,8 @@ Gold Analysis Report {emoji}
 
 Price: ${price['current']}
 Change: {price['change_percent']:+.2f}%
-
-RSI: {indicators['rsi']} ({indicators['rsi_status']})SMA 20: ${indicators['sma_20']}
+RSI: {indicators['rsi']} ({indicators['rsi_status']})
+SMA 20: ${indicators['sma_20']}
 
 Resistance: ${levels['resistance_1']}
 Support: ${levels['support_1']}
@@ -346,9 +341,9 @@ def home():
     <html>
     <head>
         <title>Gold Analyzer Bot</title>
-        <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #1a1a2e; color: #eee; }
-            h1 { color: #ffd700; }            .status { padding: 10px; background: #16213e; border-radius: 5px; margin: 20px 0; }
+        <style>            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #1a1a2e; color: #eee; }
+            h1 { color: #ffd700; }
+            .status { padding: 10px; background: #16213e; border-radius: 5px; margin: 20px 0; }
             .endpoint { background: #0f3460; padding: 15px; margin: 10px 0; border-radius: 5px; }
             code { background: #1a1a2e; padding: 2px 5px; border-radius: 3px; color: #00ff00; }
         </style>
@@ -395,9 +390,9 @@ def health_check():
 @app.route('/stats')
 def get_statistics():
     return jsonify(stats.to_dict())
-
 @app.route('/telegram/test')
-def test_telegram():    message = f"Telegram Test Successful! Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+def test_telegram():
+    message = f"Telegram Test Successful! Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     success = send_telegram_message(message)
     return jsonify({
         "success": success,
@@ -438,7 +433,4 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=PORT, debug=False)
     except Exception as e:
         logger.error(f"Failed to start server: {str(e)}")
-
         sys.exit(1)
-
-
