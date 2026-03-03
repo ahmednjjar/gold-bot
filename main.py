@@ -91,20 +91,26 @@ def analyze_gold():
     logger.info("Starting Gold Analysis...")
     
     try:
-        url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F"
-        params = {'interval': '1h', 'range': '5d'}
-        
-        response = requests.get(url, params=params, timeout=15)
-        response.raise_for_status()
-        data = response.json()
-                if 'chart' not in data or 'result' not in data['chart']:
-            return {"error": "No data received from API"}
-        
-        if not data['chart']['result']:
-            return {"error": "Empty result from API"}
-        
-        chart = data['chart']['result'][0]
-        quotes = chart['indicators']['quote'][0]
+    # محاولة Yahoo Finance مع headers
+    url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F"
+    params = {'interval': '1h', 'range': '5d'}
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    }
+    
+    logger.info("Fetching data from Yahoo Finance...")
+    response = requests.get(url, params=params, headers=headers, timeout=15)
+    
+    if response.status_code != 200:
+        logger.error(f"API returned status code: {response.status_code}")
+        return {"error": f"API error: {response.status_code}"}
+    
+    data = response.json()
+    
+    # التحقق من البيانات
+    if not data.get('chart') or not data['chart'].get('result'):
+        logger.error("No data in API response")
+        return {"error": "No data received from API"}
         
         closes = quotes['close']
         highs = quotes['high']
@@ -434,3 +440,4 @@ if __name__ == '__main__':
         logger.error(f"Failed to start server: {str(e)}")
 
         sys.exit(1)
+
