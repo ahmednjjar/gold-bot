@@ -90,9 +90,9 @@ def retry_on_failure(max_attempts=3, delay=5):
 def analyze_gold():
     logger.info("Starting Gold Analysis...")
     
-    try:
-    # محاولة Yahoo Finance مع headers
-    url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F"
+    try:    
+        # محاولة Yahoo Finance مع headers
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F"
     params = {'interval': '1h', 'range': '5d'}
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
@@ -440,4 +440,5 @@ if __name__ == '__main__':
         logger.error(f"Failed to start server: {str(e)}")
 
         sys.exit(1)
+
 
